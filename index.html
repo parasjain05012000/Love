@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Forever Valentine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- GENERAL SETTINGS --- */
+        :root {
+            --primary-color: #ff4d6d;
+            --box-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #590d22;
+            --gold: #ffb703;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(180deg, #ffccd5 0%, #fff0f3 100%);
+            font-family: 'Nunito', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+        }
+
+        /* --- TRANSITION OVERLAY (Heart Animation) --- */
+        #transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ff4d6d;
+            z-index: 2000;
+            clip-path: circle(0% at 50% 50%);
+            pointer-events: none;
+            transition: clip-path 1s ease-in-out;
+        }
+        
+        .transition-active {
+            clip-path: circle(150% at 50% 50%) !important;
+        }
+
+        /* --- BACKGROUND ANIMATION --- */
+        #falling-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .rose-petal {
+            position: absolute;
+            top: -10%;
+            user-select: none;
+            z-index: 1;
+            animation: fall linear infinite, sway ease-in-out infinite;
+        }
+
+        /* --- BOX STYLES --- */
+        .container-box {
+            background: var(--box-bg);
+            border-radius: 25px;
+            box-shadow: 0 10px 40px rgba(89, 13, 34, 0.2);
+            padding: 25px;
+            width: 85%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            border: 3px solid #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1, h2 {
+            font-family: 'Dancing Script', cursive;
+            color: var(--primary-color);
+            margin: 10px 0;
+            font-size: 2.2rem;
+            line-height: 1.2;
+        }
+
+        p {
+            color: var(--text-color);
+            font-size: 1.05rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        /* --- VIDEO STYLES --- */
+        .video-wrapper {
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border: 2px solid white;
+        }
+
+        video {
+            width: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        /* --- BUTTONS --- */
+        .btn {
+            background: linear-gradient(45deg, #ff4d6d, #c9184a);
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 77, 109, 0.4);
+            font-family: 'Dancing Script', cursive;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+
+        .btn:active { transform: scale(0.95); }
+
+        /* --- PAGE VISIBILITY --- */
+        .page {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            justify-content: center;
+            align-items: center;
+        }
+        .active { display: flex; }
+
+        /* --- PAGE 2: PROPOSAL & NO BUTTON --- */
+        .buttons-container {
+            position: relative;
+            width: 100%;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #no-btn {
+            position: absolute;
+            background: #590d22; 
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
+
+        /* --- PAGE 3: GALLERY (MODIFIED SECTION) --- */
+        #page3 .container-box {
+            width: 95%;
+            max-width: 500px;
+            padding: 15px;
+            max-height: 90vh; 
+        }
+
+        #gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            height: 60vh;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .flip-card-wrapper {
+            background-color: transparent;
+            width: 100%;
+            height: 220px;
+            perspective: 1000px;
+        }
+
+        .flip-card-wrapper:last-child {
+            grid-column: span 2; 
+            height: 250px;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 2px solid white; 
+            background: #fff;
+        }
+
+        .flip-card-front img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .flip-card-back {
+            background-color: #fff0f3;
+            color: #800f2f;
+            transform: rotateY(180deg);
+            padding: 10px;
+            font-size: 0.85rem;
+            border: 2px solid #ffccd5;
+            flex-direction: column;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        /* --- PAGE 4: COUPONS --- */
+        .coupon-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .coupon {
+            background: white;
+            border: 2px dashed var(--primary-color);
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- PAGE 6: REASONS LIST --- */
+        .reasons-container {
+            text-align: left;
+            max-height: 350px;
+            overflow-y: auto;
+            width: 100%;
+            padding: 10px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 15px;
+        }
+
+        .reason-item {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ffccd5;
+            padding-bottom: 10px;
+        }
+
+        .reason-item b {
+            color: var(--primary-color);
+            display: block;
+            font-size: 1.1rem;
+        }
+
+        /* --- PAGE 7: WISH FORM --- */
+        textarea {
+            width: 100%;
+            height: 120px;
+            border-radius: 15px;
+            border: 2px solid #ffccd5;
+            padding: 10px;
+            font-family: 'Nunito', sans-serif;
+            resize: none;
+            margin-bottom: 15px;
+        }
+
+        .shiny-text {
+            background: linear-gradient(to right, #ff4d6d 20%, #ffb703 40%, #ff4d6d 60%, #ffb703 80%);
+            background-size: 200% auto;
+            color: #000;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+            font-weight: bold;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        @keyframes fall { to { top: 110%; } }
+        @keyframes sway { 0%,100% { transform: translateX(0); } 50% { transform: translateX(20px); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="transition-overlay"></div>
+
+    <audio id="bg-music" loop autoplay>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="falling-container"></div>
+
+    <div id="page1" class="page active">
+        <div class="container-box">
+            <div class="video-wrapper">
+                <video autoplay muted loop playsinline><source src="couple_loop.mp4" type="video/mp4"></video>
+            </div>
+            <h1>Happy Valentine's Day! 💖</h1>
+            <p>I have prepared a little journey for us...</p>
+            <button class="btn" onclick="handleTransition('page2')">Start The Magic ✨</button>
+        </div>
+    </div>
+
+    <div id="page2" class="page">
+        <div class="container-box">
+            <div class="video-wrapper">
+                 <video autoplay muted loop playsinline>
+                    <source src="videos_loop.mp4" type="video/mp4">
+                </video>
+            </div>
+            <h2>My Dearest, 🌹</h2>
+            <p style="font-style: italic;">"In a world of temporary things, you are my perpetual feeling. With this digital rose, I give you not just a flower, but my heart, my patience, and my forever."</p>
+            <p><strong>Will you accept this?</strong></p>
+            
+            <div class="buttons-container">
+                <button class="btn" onclick="handleYesClick()">Yes, I Will! 💍</button>
+                <button id="no-btn" class="btn">No</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page3" class="page">
+        <div class="container-box">
+            <h2>Our Beautiful Memories 📸</h2>
+            <p>Tap each photo to read my heart...</p>
+            <div id="gallery-grid">
+                <div class="flip-card-wrapper" onclick="flipCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front"><img src="photo1.jpeg" alt="Memory"></div>
+                        <div class="flip-card-back">
+                            <p><strong>The Beginning</strong></p>
+                            The day we met, I never knew that I was looking at my entire future. You looked so stunning. 😍
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card-wrapper" onclick="flipCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front"><img src="photo2.jpeg" alt="Memory"></div>
+                        <div class="flip-card-back">
+                            <p><strong>Your Smile</strong></p>
+                            Whenever I see this smile, my bad days just disappear. It is my favorite view in the world. ☀️
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card-wrapper" onclick="flipCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front"><img src="photo3.jpeg" alt="Memory"></div>
+                        <div class="flip-card-back">
+                            <p><strong>Adventure</strong></p>
+                            Traveling with you makes every place feel like home. Can't wait for our next trip! ✈️
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card-wrapper" onclick="flipCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front"><img src="photo4.jpeg" alt="Memory"></div>
+                        <div class="flip-card-back">
+                            <p><strong>Silly Us</strong></p>
+                            I love that we can be weird together. Life is never boring with you. 🤪
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card-wrapper" onclick="flipCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front"><img src="photo5.jpeg" alt="Memory"></div>
+                        <div class="flip-card-back">
+                            <p><strong>Quiet Moments</strong></p>
+                            Even in silence, holding your hand is all the communication I need. 🤝
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card-wrapper" onclick="flipCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front"><img src="photo6.jpeg" alt="Memory"></div>
+                        <div class="flip-card-back">
+                            <p><strong>Foodies</strong></p>
+                            Remember this meal? The food was good, but the company was perfect. 🍔
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card-wrapper" onclick="flipCard(this)">
+                    <div class="flip-card-inner">
+                        <div class="flip-card-front"><img src="photo7.jpeg" alt="Memory"></div>
+                        <div class="flip-card-back">
+                            <p><strong>Forever</strong></p>
+                            I choose you today, and I'll choose you tomorrow. Over and over again. ❤️
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn" style="margin-top: 15px;" onclick="handleTransition('page4')">Gifts for You 🎁</button>
+        </div>
+    </div>
+
+    <div id="page4" class="page">
+        <div class="container-box">
+            <h2>Love Coupons 🎟️</h2>
+            <div class="coupon-grid">
+            <div class="coupon" onclick="redeemCoupon(this)"><span>💆‍♀️</span><br>Back Massage</div>
+            <div class="coupon" onclick="redeemCoupon(this)"><span>🍜</span><br>Date Night Choice</div>
+            <div class="coupon" onclick="redeemCoupon(this)"><span>🎬</span><br>Movie Marathon</div>
+            <div class="coupon" onclick="redeemCoupon(this)"><span>🧁</span><br>Sweet Treat</div>
+            <div class="coupon" onclick="redeemCoupon(this)"><span>🛑</span><br>End One Argument</div>
+            <div class="coupon" onclick="redeemCoupon(this)"><span>🫂</span><br>Unlimited Cuddles</div>
+            </div>
+            <button class="btn" onclick="handleTransition('page5')">My Promise To You 💌</button>
+        </div>
+    </div>
+
+    <div id="page5" class="page">
+        <div class="container-box">
+            <h1 class="shiny-text">I Love You! ✨</h1>
+            <div class="long-message">
+                <p>My Darling,</p>
+                <p>Happy Valentine's Day. I wanted to create this little space to tell you how much you mean to me. </p>
+                <p>I promise to always be your safe space, to listen when you need to talk, and to hold you when you need silence. I will never let you feel alone in this world. You are my happiness, my motivation, and my best friend.</p>
+                <p>Thank you for being you. I love you, endlessly.</p>
+                <p style="text-align: right;">- Yours Forever ❤️</p>
+            </div>
+            <br>
+            <p>✨ You are my shining star ✨</p>
+            <button class="btn" onclick="handleTransition('page6')">Why I Love You ❤️</button>
+        </div>
+    </div>
+
+    <div id="page6" class="page">
+        <div class="container-box">
+            <h2>Reasons Why I Love You 💖</h2>
+            <div class="reasons-container">
+                <div class="reason-item">
+                    <b>1. Your Unconditional Support</b>
+                    No matter how tough life gets, you are the one person who stands by me. Your belief in me gives me the strength to conquer anything.
+                </div>
+                <div class="reason-item">
+                    <b>2. The Way You Smile</b>
+                    Your smile isn't just a look; it's a light that brightens my darkest days. Seeing you happy is my greatest achievement.
+                </div>
+                <div class="reason-item">
+                    <b>3. Our Late Night Conversations</b>
+                    I love how we can talk about everything and nothing at the same time. Those moments of connection are the highlights of my week.
+                </div>
+                <div class="reason-item">
+                    <b>4. Your Kind Soul</b>
+                    The way you care for others and the empathy you show is truly inspiring. You make me want to be a better man every single day.
+                </div>
+                <div class="reason-item">
+                    <b>5. How Safe I Feel With You</b>
+                    In your arms, the world stops spinning. You are my home, my anchor, and my peace in this chaotic world.
+                </div>
+                <div class="reason-item">
+                    <b>6. Your Silly Side</b>
+                    I love that we can be completely weird together. Your laugh is the most beautiful soundtrack I've ever heard.
+                </div>
+                <div class="reason-item">
+                    <b>7. The Way You Challenge Me</b>
+                    You don't just agree with me; you push me to think deeper and grow. Thank you for helping me evolve.
+                </div>
+                <div class="reason-item">
+                    <b>8. Your Incredible Patience</b>
+                    I know I’m not always easy, but the way you handle me with grace and patience proves how deep your love is.
+                </div>
+                <div class="reason-item">
+                    <b>9. The Little Things</b>
+                    The way you remember small details about me or how you look at me when you think I'm not noticing—I cherish it all.
+                </div>
+                <div class="reason-item">
+                    <b>10. Your Resilience</b>
+                    Watching you handle challenges with such strength makes me so proud to call you mine. You are a warrior.
+                </div>
+                <div class="reason-item">
+                    <b>11. Our Shared Dreams</b>
+                    Thinking about our future together—the travels, the home, the life we are building—makes me so excited for every tomorrow.
+                </div>
+                <div class="reason-item">
+                    <b>12. Simply Because You Are You</b>
+                    There is no one else in this world like you. You are a masterpiece, and I am the luckiest person to love you.
+                </div>
+            </div>
+            <button class="btn" onclick="handleTransition('page7')">Make a Wish 🌠</button>
+        </div>
+    </div>
+
+    <div id="page7" class="page">
+        <div class="container-box">
+            <h2>Make a Wish 🌠</h2>
+            <p>Tell me one thing you wish for, or a message you want to send to my heart.</p>
+            <textarea id="wish-text" placeholder="I wish for..."></textarea>
+            <button class="btn" onclick="sendWish()">Send Wish to Paras 💌</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPageId = 'page1';
+
+        function handleTransition(nextPageId) {
+            const overlay = document.getElementById('transition-overlay');
+            overlay.classList.add('transition-active');
+
+            setTimeout(() => {
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(nextPageId).classList.add('active');
+                overlay.classList.remove('transition-active');
+            }, 1000);
+        }
+
+        // --- NO BUTTON LOGIC ---
+        const noBtn = document.getElementById('no-btn');
+        function moveNoButton() {
+            const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
+            const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+            noBtn.style.position = 'fixed'; 
+            noBtn.style.left = x + 'px';
+            noBtn.style.top = y + 'px';
+        }
+        noBtn.addEventListener('mouseover', moveNoButton);
+        noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveNoButton(); });
+
+        function handleYesClick() {
+            for(let i=0; i<30; i++) createConfetti();
+            setTimeout(() => handleTransition('page3'), 1000);
+        }
+
+        function createConfetti() {
+            const c = document.createElement('div');
+            c.style.position = 'fixed';
+            c.style.left = '50%'; c.style.top = '50%';
+            c.innerText = '❤️';
+            c.style.zIndex = '9999';
+            document.body.appendChild(c);
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 200 + 50;
+            c.animate([
+                { transform: 'translate(0,0)' },
+                { transform: `translate(${Math.cos(angle)*velocity}px, ${Math.sin(angle)*velocity}px) scale(0)`, opacity: 0 }
+            ], { duration: 1000, fill: 'forwards' });
+            setTimeout(() => c.remove(), 1000);
+        }
+
+        function flipCard(card) { card.classList.toggle('flipped'); }
+        function redeemCoupon(el) { el.style.opacity = '0.5'; el.innerHTML += "<br>✅"; }
+
+        // --- WISH LOGIC ---
+        function sendWish() {
+            const wish = document.getElementById('wish-text').value;
+            if(!wish) { alert("Please write a wish first!"); return; }
+            
+            const phoneNumber = "9759600699"; // REPLACE WITH YOUR NUMBER
+            const message = encodeURIComponent("Hey Paras, I have a wish: " + wish);
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
+            
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Rose Rain
+        const container = document.getElementById('falling-container');
+        function createPetal() {
+            const p = document.createElement('div');
+            p.classList.add('rose-petal');
+            p.innerText = ['🌹', '❤️', '✨'][Math.floor(Math.random()*3)];
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.animationDuration = Math.random() * 3 + 4 + 's';
+            container.appendChild(p);
+            setTimeout(() => p.remove(), 6000);
+        }
+        setInterval(createPetal, 500);
+
+        // --- AUTOPLAY & FALLBACK LOGIC ---
+        // 1. Try to play immediately when the window loads
+        window.onload = function() {
+            const bgMusic = document.getElementById('bg-music');
+            bgMusic.play().catch(error => {
+                console.log("Browser blocked autoplay. Music will start on first click.");
+            });
+        };
+
+        // 2. Backup: If browser blocked the autoplay, start it on the very first touch/click
+        document.body.addEventListener('click', () => {
+            const bgMusic = document.getElementById('bg-music');
+            if(bgMusic.paused) {
+                bgMusic.play();
+            }
+        }, { once: true });
+    </script>
+</body>
+</html>
